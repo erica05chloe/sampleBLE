@@ -15,17 +15,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-        //main -- AttendanceView
+
+        sleep(1);
         
-        let mainVc = AttendanceView()
-        //次画面があるなら
-        //let mainNVc = UINavigationCOntroller(rootViewController: mainVc)
+        let mainVc = StartViewController()
+        let mainNVc = UINavigationController(rootViewController: mainVc)
+        mainNVc.setNavigationBarHidden(true, animated: true)
+    
         
+
         window = UIWindow(frame: UIScreen.main.bounds)
-        window?.rootViewController = mainVc
+        window?.rootViewController = mainNVc
         window?.makeKeyAndVisible()
-        
-       
+    
         return true
     }
 

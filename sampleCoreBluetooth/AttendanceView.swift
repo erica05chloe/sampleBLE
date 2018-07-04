@@ -10,28 +10,21 @@ import UIKit
 import CoreBluetooth
 
 
-class AttendanceView: UIViewController, UITextFieldDelegate, UIPickerViewDataSource, UIPickerViewDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate{
+class AttendanceView: UIViewController, UITextFieldDelegate, UINavigationControllerDelegate{
+    
     
     var bleCentral = BleCentral()
     var ud = UserDefaults.standard
     
-    @IBOutlet weak var cameraView: UIImageView!
-    @IBOutlet weak var label: UILabel!
-    
-    //name 選択？　入力？
+    let image0 = UIImage(named: "crow1")
+    let image1 = UIImage(named: "crow2")
+    var count = 0
+
+    @IBOutlet weak var myLabel: UILabel!
     @IBOutlet weak var textName: UITextField!
-    @IBOutlet weak var nameLabel: UILabel!
+    @IBOutlet weak var bleBtn: UIButton!
     
-    @IBOutlet weak var selectAttend: UIPickerView!
    
-    
-    var attend = ["出社", "退社"]
-    
-    
-    //確認用
-    private var imageData: NSData!
-    
-    
     override func awakeFromNib() {
         super.awakeFromNib()
     }
@@ -40,177 +33,257 @@ class AttendanceView: UIViewController, UITextFieldDelegate, UIPickerViewDataSou
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        myLabel.text = " tap me !"
         textName.delegate = self
-        selectAttend.dataSource = self
-        selectAttend.delegate = self
-        
-    
-        initViews()
+        textName.placeholder = "半角数字"
+
         bleCentral.setup()
+        bleBtn.setImage(image0, for: UIControlState())
         
-        
+        if ud.object(forKey: "Number") == nil {
+         textName.text = ""
+    } else {
         textName.text = loadName()
-    
+        }
+        
     }
   
-    @IBAction func startScan(_ sender: UIButton) {
-        
-        bleCentral.startScan()
-        
-    }
-    
-    
-    
-//    userDefaults読込
-    func loadName() -> String {
-        let str: String = ud.object(forKey: "UserName") as! String
 
-        return str
-    }
     
-    
-    
-    //camera -> peripheral側でする
-    @IBAction func startCamera(_ sender: Any) {
+    @IBAction func startBLE(_ sender: AnyObject) {
+        count += 1
         
-        let sourceType: UIImagePickerControllerSourceType = UIImagePickerControllerSourceType.camera
-        
-        //利用可能かチェック
-        if UIImagePickerController.isSourceTypeAvailable(UIImagePickerControllerSourceType.camera){
+        if(count%2 == 0) {
+            bleBtn.setImage(image0, for: UIControlState())
+            bleCentral.stopScan()
+            myLabel.text = "tap me !"
             
-            //インスタンス
-            let cameraPicker = UIImagePickerController()
-            cameraPicker.sourceType = sourceType
-            cameraPicker.delegate = self
-            self.present(cameraPicker, animated: true, completion: nil)
-        } else {
-            label.text = "permit to use camera"
+        } else if(count%2 == 1) {
+            bleBtn.setImage(image1, for: UIControlState())
+            bleCentral.startScan()
+            myLabel.text = "connecting..."
         }
     }
     
-    //撮影完了
-    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
+//    userDefaults読込
+    func loadName() -> String {
         
-        if let pickedImage = info[UIImagePickerControllerOriginalImage] as? UIImage {
-            
-            cameraView.contentMode = .scaleAspectFit
-            cameraView.image = pickedImage
-           
-          }
-        
-        //close camera
-        picker.dismiss(animated: true, completion: nil)
+        let str: String = ud.object(forKey: "Number") as! String
+        return str
     }
+    
         
     
-    //textfield
+    //textField
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         //returnで閉じる
         textField.resignFirstResponder()
         return true
     }
     
-    
-    //selectAttend
-    func numberOfComponents(in pickerView: UIPickerView) -> Int {
-        return 1
-    }
-    
-    func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
-        return attend.count
-    }
-    
-    func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
-        return attend[row]
-    }
+    //入力制限
+    //これかvalidationに半角checkを追加するか。
+//    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+//        return string.isEmpty || string.range(of: "^[0-9]+$", options: .regularExpression, range: nil, locale: nil) != nil
+//    }
     
     
-    //pickerview選択した時
-    func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
-        print("\(attend[row])")
-        
-        //0 == 出社
-        //1 == 退社
-        
-        if attend[row] == "出社" {
-
-            ud.set(0, forKey: "Attendance")
-            
-        } else {
-
-            ud.set(1, forKey: "Attendance")
-       }
-        
-    }
-
-
     
     //validationCheck
-     private func validationCheck() -> Bool {
-        
-        //name 空文字check
+    private func validationCheck() -> Bool {
+        var result = true
+
+        //number 空文字check
+        //TODO:- 半角かどうか
         if let text = textName.text {
-            if text.utf8.count > 0 {
+            if text.count > 0 {
+            let predicate = NSPredicate(format: "SELF MATCHES '\\\\d+'")
             
-                nameLabel.text = ""
-                //userdefaultに追加
-                ud.set(text, forKey: "UserName")
-                return true
-                
+                ud.set(text, forKey: "Number")
+                result = predicate.evaluate(with: text)
+
             } else {
-                nameLabel.text = "write your name"
-                ud.set(text, forKey: "UserName")
-                return false
+                result = false
+          }
+        }
+            if result == false {
+                alert()
+            }
+            return result
+    }
+
+    
+    
+    //入力エラーアラート
+    func alert() {
+        let alert: UIAlertController = UIAlertController(title: "ERROR", message: "入力内容を確認してください", preferredStyle: UIAlertControllerStyle.alert)
+        let defaultAction: UIAlertAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler:{
+            (action: UIAlertAction!) -> Void in } )
+        
+        alert.addAction(defaultAction)
+        present(alert, animated: true, completion: nil)
+
+    }
+    
+    //送信完了アラート
+    func successAlert() {
+        let alert: UIAlertController = UIAlertController(title: "SUCCESS", message: "送信完了", preferredStyle: UIAlertControllerStyle.alert)
+        let defaultAction: UIAlertAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler:{
+            (action: UIAlertAction!) -> Void in } )
+        
+        alert.addAction(defaultAction)
+        present(alert, animated: true, completion: nil)
+    }
+
+    
+    //送信失敗アラート
+    func faildAlert() {
+        let alert: UIAlertController = UIAlertController(title: "ERROR", message: "送信失敗", preferredStyle: UIAlertControllerStyle.alert)
+        let defaultAction: UIAlertAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler:{ (action: UIAlertAction!) -> Void in } )
+        
+        alert.addAction(defaultAction)
+        present(alert, animated: true, completion: nil)
+    }
+
+    
+    
+    //出勤ボタン
+    @IBAction func inWork(_ sender: UIButton) {
+        
+        if bleFlg == true {
+        if validationCheck() {
+        ud.set(1, forKey: "Attendance")
+            bleCentral.writeRequest()
+        }
+        
+        while !indicateFlg {
+            Thread.sleep(forTimeInterval: 0.5)
+            print("処理まち")
+            
+            
+            if indicateFlg == true {
+                
+                successAlert()
+                
+                
+                ud.removeObject(forKey: "Attendance")
+                bleBtn.setImage(image0, for: UIControlState())
+                
+                break
+            } else {
+                
+                faildAlert()
+                bleBtn.setImage(image0, for: UIControlState())
+
+                break
             }
         }
-        
-        //pickerView
-        
-        
-        
-        //camera
-        if imageData != nil {
-            return true
+        bleCentral.disconnect()
+        myLabel.text = "stop connect"
+            
         } else {
-            label.text = "take a photo"
-            return false
+            faildAlert()
+        }
+    }
+    
+    
+    //退勤ボタン
+    @IBAction func outWork(_ sender: UIButton) {
+        
+        if bleFlg == true {
+        if validationCheck() {
+            ud.set(2, forKey: "Attendance")
+            bleCentral.writeRequest()
         }
         
-        
-        
+        while !indicateFlg {
+            Thread.sleep(forTimeInterval: 0.5)
+            print("処理まち")
+            
+            
+            if indicateFlg == true {
+               
+               successAlert()
+                
+                ud.removeObject(forKey: "Attendance")
+                bleBtn.setImage(image0, for: UIControlState())
+
+                break
+            } else {
+                
+                faildAlert()
+                bleBtn.setImage(image0, for: UIControlState())
+               
+                break
+            }
+        }
+        bleCentral.disconnect()
+        myLabel.text = "stop connect"
+            
+        } else {
+            faildAlert()
+        }
     }
     
-    private func initViews() {
-        
-    }
     
+    //前画面に戻る
+    @IBAction func tapToBack(_ sender: UIBarButtonItem) {
+        self.navigationController?.popViewController(animated: true)
+    }
     
     
     //送信ボタン
-    //アラートor固定側(pceripheral)での反応
-    @IBAction func tapToSend(_ sender: AnyObject) {
-        if validationCheck() {
-        
-        //TODO:- write request
-//            var attend = ud.integer(forKey: "Attendance")
-//            var value: UInt8 = UInt8(attend & 0xFF)
-//            var data = NSData(bytes: [value] as [UInt8], length: 1)
-            
-        bleCentral.writeRequest()
-            
-        
-        bleCentral.stopScan()
-            
-//        } else {
-//            let alert: UIAlertController = UIAlertController(title: "ERROR", message: "入力内容を確認してください", preferredStyle: UIAlertControllerStyle.alert)
-//            let defaultAction: UIAlertAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler:{
-//                (action: UIAlertAction!) -> Void in } )
+    //アラートor固定側(peripheral)での反応
+//@IBAction func tapToSend(_ sender: AnyObject) {
 //
-//            alert.addAction(defaultAction)
+//    if validationCheck() {
 //
-        }
-
-    }
+//        bleCentral.writeRequest()
+//
+//    //attendanceのud消す
+//    ud.removeObject(forKey: "Attendance")
+//
+//    //"選択してください"に戻る
+//        selectAttend.selectRow(0, inComponent: 0, animated: true)
+//    }
+//
+//    //この辺でflgの状態知りたい
+//    //ループさせる
+//    while !indicateFlg {
+//
+//        //処理を一定時間止める
+//        Thread.sleep(forTimeInterval: 0.3)
+//        print("処理まち")
+//
+//
+//    if indicateFlg == true {
+//        let alert: UIAlertController = UIAlertController(title: "SUCCESS", message: "送信完了", preferredStyle: UIAlertControllerStyle.alert)
+//        let defaultAction: UIAlertAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler:{
+//            (action: UIAlertAction!) -> Void in } )
+//
+//        alert.addAction(defaultAction)
+//        present(alert, animated: true, completion: nil)
+//        print("とんでない！")
+//        bleCentral.disconnect()
+//
+//
+//        break
+//
+//    } else {
+//
+//        //faild to write request
+//        let alert: UIAlertController = UIAlertController(title: "ERROR", message: "送信失敗", preferredStyle: UIAlertControllerStyle.alert)
+//        let defaultAction: UIAlertAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler:{ (action: UIAlertAction!) -> Void in } )
+//
+//        alert.addAction(defaultAction)
+//        present(alert, animated: true, completion: nil)
+//        print("とんでる(；ω；)")
+//        break
+//      }
+//
+//    }
+//    bleCentral.stopScan()
+//    }
+//
     
 }
-

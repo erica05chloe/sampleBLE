@@ -8,22 +8,28 @@
 //central
 
 import CoreBluetooth
+import UIKit
 
 
+var indicateFlg = false
+var bleFlg = false
 
-class BleCentral: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
+class BleCentral: UIViewController, CBCentralManagerDelegate, CBPeripheralDelegate {
     
-
     var _centralManager: CBCentralManager!
     var _peripheral: CBPeripheral!
     var _serviceUUID: CBUUID!
     var _characteristicUUID: CBUUID!
-    var _characteristicForWrite: CBCharacteristic!
+    var _indiCharaUUID: CBUUID!
     
-    //lightblue
+    var _characteristicForWrite: CBCharacteristic!
+    var _characteristicForIndicate: CBCharacteristic!
+    
+    
     let kServiceUUID = "2a04cfbc-62df-11e8-adc0-fa7ae01bbebc"
     let kCharacteristicUUID = "2a04cfbc-62df-11e8-adc0-fa7ae01bbebc"
-    
+    let kindiCharaUUID = "2a04cfbc-62df-11e8-adc0-fa7ae01bbebd"
+
     
     //centralManager初期化
     //queue: nilだとUI, backgroundで動いて欲しいからdispatchqueue
@@ -31,11 +37,9 @@ class BleCentral: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         _centralManager = CBCentralManager(delegate: self, queue: DispatchQueue.global())
         _serviceUUID = CBUUID(string: kServiceUUID)
         _characteristicUUID = CBUUID(string: kCharacteristicUUID)
-      
-        
-        
+        _indiCharaUUID = CBUUID(string: kindiCharaUUID)
+    
     }
-  
     
     
     //start scan
@@ -43,13 +47,13 @@ class BleCentral: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         print("##### _centralManager.state: \(_centralManager.state.rawValue)")
         if _centralManager.state == .poweredOn {
             _centralManager.scanForPeripherals(withServices: [_serviceUUID], options: nil)
-//            options: [CBCentralManagerScanOptionAllowDuplicatesKey: true]
-//            何回も接続する
+//            options: [CBCentralManagerScanOptionAllowDuplicatesKey: true] -- 何回も接続される
             
             print("start scan")
         }
     }
 
+    
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         print("##### _centralManager.state: \(_centralManager.state.rawValue)")
         
@@ -69,6 +73,7 @@ class BleCentral: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         _centralManager.connect(_peripheral, options: nil)
         print("connect peripheral")
         
+        stopScan()
     }
     
     //peripheral接続後 service探索
@@ -83,7 +88,7 @@ class BleCentral: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     //service発見するとよばれる
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         
-        //探したら保存
+    
         if error != nil {
             print("failed to discover service")
             disconnect()
@@ -105,16 +110,24 @@ class BleCentral: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
 
             disconnect()
             print("failed to discover characteristic")
+            bleFlg = false
             return
             
         }
-            //writeのcharacteristicを探す　保存
+            //writeのcharacteristicを探す
             let characteristics = service.characteristics
             
             for cha: CBCharacteristic in characteristics! {
                 if cha.uuid.isEqual(_characteristicUUID){
                     _characteristicForWrite = cha
-                    print("save cha for write")
+                    print("save cha: \(cha)")
+                    bleFlg = true
+    
+                } else if cha.uuid.isEqual(_indiCharaUUID){
+                    _characteristicForIndicate = cha
+                    print("save indicate cha: \(cha)")
+                    bleFlg = true
+                    
                 }
             }
             
@@ -126,56 +139,100 @@ class BleCentral: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                     return
                 }
             }
-            
-        }
+        
+    }
     
-    //TODO:- 名前を送る
+    
     //writeRequest
     func writeRequest() {
         
         let ud = UserDefaults.standard
         let attend = ud.integer(forKey: "Attendance")
-        let value: UInt8 = UInt8(attend & 0xFF)
-        let data = NSData(bytes: [value] as [UInt8], length: 1)
-        print ("\(data)")
+        let number = ud.integer(forKey: "Number")
+        let attendValue: UInt8 = UInt8(attend & 0xff)
+        let numberValue: UInt16 = UInt16(number & 0xffff)
+        
+        let attendData = NSData(bytes: [attendValue] as [UInt8], length: 1)
+        let numberData = NSData(bytes: [numberValue] as [UInt16], length:3)
+        print("\(attendData)")
+        print("\(numberData)")
+        
+        var data: Data {
+            var data = Data()
+            data.append(attendData as Data)
+            data.append(numberData as Data)
+            return data
+        }
+        
+        //indicateFlgの状態を変える
+        indicateFlg = false
         
         if (_peripheral == nil){
-            print("faild to write")
+            
+            print("faild to write request")
             return
         }
-        _peripheral.writeValue(data as Data, for: _characteristicForWrite, type: .withResponse)
+        
+        
+        _peripheral.writeValue(data, for: _characteristicForWrite, type: .withResponse)
+
+        print("writeRequest成功")
+
     }
     
     
-    //TODO:- error for がでる
     //did write value で完了
     func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?){
+        
+        
         if error != nil {
             disconnect()
-            print("error for write request")
+            print("faild to write")
             return
         } else {
+            
+            let ud = UserDefaults.standard
+            ud.removeObject(forKey: "Attendance")
+            
+            //indicate 受け取るためのセット
+            _peripheral.setNotifyValue(true, for: _characteristicForIndicate)
+            
             print("success")
+            
         }
         
     }
+
     
-    
+    //characteisticのvalueが変化 indicate
+    func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        
+        if error != nil{
+            disconnect()
+            print("更新通知エラー \(String(describing: error))")
+        } else {
+            
+            indicateFlg = true
+            
+            print("更新通知get")
+            
+            _peripheral.setNotifyValue(false, for: _characteristicForIndicate)
+            
+        }
+    }
+
     
     //peripheral接続失敗
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
         print("failed to connect peripheral")
     }
     
-    
-    //誰が切ってるのか...
-    //stop scanの後28秒放置でdis4
-    //peripheralのproperty変えるとwarning→dis4
-    
+
+    //TODO:- 原因探る
+    //接続が切れたとき
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         print("dis4")
 
-        self._peripheral = nil
     }
 
     
@@ -192,10 +249,6 @@ class BleCentral: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         _centralManager.stopScan()
         print("stop scan")
     }
-   
-    
 
 
 }
-    
-
