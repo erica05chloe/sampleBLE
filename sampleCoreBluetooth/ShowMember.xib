@@ -20,16 +20,10 @@
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
                 <navigationBar contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="fws-dR-aeU">
-                    <rect key="frame" x="0.0" y="27" width="375" height="44"/>
+                    <rect key="frame" x="0.0" y="34" width="375" height="44"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
                     <items>
-                        <navigationItem title="社員一覧" id="Grc-RJ-3Yc">
-                            <barButtonItem key="leftBarButtonItem" title="&lt;   " id="1XZ-rk-mDk">
-                                <connections>
-                                    <action selector="tapToBack:" destination="-1" id="b7g-F5-1oi"/>
-                                </connections>
-                            </barButtonItem>
-                        </navigationItem>
+                        <navigationItem title="社員一覧" id="Grc-RJ-3Yc"/>
                     </items>
                 </navigationBar>
             </subviews>

@@ -10,7 +10,7 @@ import UIKit
 import CoreBluetooth
 
 
-class AttendanceView: UIViewController, UITextFieldDelegate, UINavigationControllerDelegate{
+class AttendanceView: UIViewController, UITextFieldDelegate, UINavigationControllerDelegate {
     
     
     var bleCentral = BleCentral()
@@ -165,7 +165,6 @@ class AttendanceView: UIViewController, UITextFieldDelegate, UINavigationControl
                 
                 successAlert()
                 
-                
                 ud.removeObject(forKey: "Attendance")
                 bleBtn.setImage(image0, for: UIControlState())
                 
@@ -203,7 +202,7 @@ class AttendanceView: UIViewController, UITextFieldDelegate, UINavigationControl
             
             if indicateFlg == true {
                
-               successAlert()
+                successAlert()
                 
                 ud.removeObject(forKey: "Attendance")
                 bleBtn.setImage(image0, for: UIControlState())
@@ -226,10 +225,10 @@ class AttendanceView: UIViewController, UITextFieldDelegate, UINavigationControl
     }
     
     
-    //前画面に戻る
-    @IBAction func tapToBack(_ sender: UIBarButtonItem) {
-        self.navigationController?.popViewController(animated: true)
-    }
+//    //前画面に戻る
+//    @IBAction func tapToBack(_ sender: UIBarButtonItem) {
+//        self.navigationController?.popViewController(animated: true)
+//    }
     
     
     //送信ボタン
