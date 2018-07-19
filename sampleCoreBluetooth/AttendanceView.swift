@@ -152,7 +152,7 @@ class AttendanceView: UIViewController, UITextFieldDelegate, UINavigationControl
         
         if bleFlg == true {
         if validationCheck() {
-        ud.set(1, forKey: "Attendance")
+        ud.set(0, forKey: "Attendance")
             bleCentral.writeRequest()
         }
         
@@ -191,7 +191,7 @@ class AttendanceView: UIViewController, UITextFieldDelegate, UINavigationControl
         
         if bleFlg == true {
         if validationCheck() {
-            ud.set(2, forKey: "Attendance")
+            ud.set(1, forKey: "Attendance")
             bleCentral.writeRequest()
         }
         

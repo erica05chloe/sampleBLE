@@ -149,18 +149,22 @@ class BleCentral: UIViewController, CBCentralManagerDelegate, CBPeripheralDelega
         let ud = UserDefaults.standard
         let attend = ud.integer(forKey: "Attendance")
         let number = ud.integer(forKey: "Number")
+        print(number)
         let attendValue: UInt8 = UInt8(attend & 0xff)
         let numberValue: UInt16 = UInt16(number & 0xffff)
+        print(numberValue)
         
         let attendData = NSData(bytes: [attendValue] as [UInt8], length: 1)
-        let numberData = NSData(bytes: [numberValue] as [UInt16], length:3)
-        print("\(attendData)")
-        print("\(numberData)")
+        let numberData = NSData(bytes: [numberValue] as [UInt16], length: 2)
+        print(attendData)
+        print(numberData)
         
         var data: Data {
             var data = Data()
-            data.append(attendData as Data)
-            data.append(numberData as Data)
+            data.append(attendValue)
+            //1byteずつ分割して送信
+            data.append(UInt8(numberValue >> 8))
+            data.append(UInt8(numberValue & 0xff))
             return data
         }
         

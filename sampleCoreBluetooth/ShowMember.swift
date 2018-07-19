@@ -16,13 +16,6 @@ class ShowMember: UIViewController {
         
     }
 
-//    //前画面に戻る
-//    @IBAction func tapToBack(_ sender: UIBarButtonItem) {
-//        self.navigationController?.popViewController(animated: true)
-//    }
-
-    
-
    
 
 }
