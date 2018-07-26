@@ -14,6 +14,7 @@ import UIKit
 var indicateFlg = false
 var bleFlg = false
 
+
 class BleCentral: UIViewController, CBCentralManagerDelegate, CBPeripheralDelegate {
     
     var _centralManager: CBCentralManager!
@@ -46,7 +47,7 @@ class BleCentral: UIViewController, CBCentralManagerDelegate, CBPeripheralDelega
     func startScan() {
         print("##### _centralManager.state: \(_centralManager.state.rawValue)")
         if _centralManager.state == .poweredOn {
-            _centralManager.scanForPeripherals(withServices: [_serviceUUID], options: nil)
+            _centralManager.scanForPeripherals(withServices: [_serviceUUID])
 //            options: [CBCentralManagerScanOptionAllowDuplicatesKey: true] -- 何回も接続される
             
             print("start scan")
@@ -87,7 +88,6 @@ class BleCentral: UIViewController, CBCentralManagerDelegate, CBPeripheralDelega
     
     //service発見するとよばれる
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
-        
     
         if error != nil {
             print("failed to discover service")
@@ -98,6 +98,7 @@ class BleCentral: UIViewController, CBCentralManagerDelegate, CBPeripheralDelega
         for service in services {
             let myService: CBService = service as! CBService
             _peripheral.discoverCharacteristics(nil, for: myService)
+            print("サービス発見")
         }
         
     }
@@ -120,14 +121,13 @@ class BleCentral: UIViewController, CBCentralManagerDelegate, CBPeripheralDelega
             for cha: CBCharacteristic in characteristics! {
                 if cha.uuid.isEqual(_characteristicUUID){
                     _characteristicForWrite = cha
-                    print("save cha: \(cha)")
+                    print("sキャラ発見: \(cha)")
                     bleFlg = true
     
                 } else if cha.uuid.isEqual(_indiCharaUUID){
                     _characteristicForIndicate = cha
                     print("save indicate cha: \(cha)")
                     bleFlg = true
-                    
                 }
             }
             
@@ -137,6 +137,9 @@ class BleCentral: UIViewController, CBCentralManagerDelegate, CBPeripheralDelega
                     print("faild to find write characteristic")
                     
                     return
+                } else {
+                    print("writerequestした")
+                    self.writeRequest()
                 }
             }
         
@@ -147,21 +150,21 @@ class BleCentral: UIViewController, CBCentralManagerDelegate, CBPeripheralDelega
     func writeRequest() {
         
         let ud = UserDefaults.standard
-        let attend = ud.integer(forKey: "Attendance")
+//        let attend = ud.integer(forKey: "Attendance")
         let number = ud.integer(forKey: "Number")
         print(number)
-        let attendValue: UInt8 = UInt8(attend & 0xff)
+//        let attendValue: UInt8 = UInt8(attend & 0xff)
         let numberValue: UInt16 = UInt16(number & 0xffff)
         print(numberValue)
         
-        let attendData = NSData(bytes: [attendValue] as [UInt8], length: 1)
+//        let attendData = NSData(bytes: [attendValue] as [UInt8], length: 1)
         let numberData = NSData(bytes: [numberValue] as [UInt16], length: 2)
-        print(attendData)
+//        print(attendData)
         print(numberData)
         
         var data: Data {
             var data = Data()
-            data.append(attendValue)
+//            data.append(attendValue)
             //1byteずつ分割して送信
             data.append(UInt8(numberValue >> 8))
             data.append(UInt8(numberValue & 0xff))
@@ -172,14 +175,11 @@ class BleCentral: UIViewController, CBCentralManagerDelegate, CBPeripheralDelega
         indicateFlg = false
         
         if (_peripheral == nil){
-            
             print("faild to write request")
             return
         }
         
-        
         _peripheral.writeValue(data, for: _characteristicForWrite, type: .withResponse)
-
         print("writeRequest成功")
 
     }
@@ -195,12 +195,8 @@ class BleCentral: UIViewController, CBCentralManagerDelegate, CBPeripheralDelega
             return
         } else {
             
-            let ud = UserDefaults.standard
-            ud.removeObject(forKey: "Attendance")
-            
             //indicate 受け取るためのセット
             _peripheral.setNotifyValue(true, for: _characteristicForIndicate)
-            
             print("success")
             
         }
@@ -224,22 +220,18 @@ class BleCentral: UIViewController, CBCentralManagerDelegate, CBPeripheralDelega
             
         }
     }
-
     
     //peripheral接続失敗
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
         print("failed to connect peripheral")
     }
     
-
-    //TODO:- 原因探る
+    //TODO:- 30秒放置で切れる
     //接続が切れたとき
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         print("dis4")
-
     }
 
-    
     
     //disconnect peripheral
     func disconnect() {

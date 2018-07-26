@@ -12,16 +12,14 @@ import CoreBluetooth
 
 class AttendanceView: UIViewController, UITextFieldDelegate, UINavigationControllerDelegate {
     
-    
     var bleCentral = BleCentral()
     var ud = UserDefaults.standard
     
-    let image0 = UIImage(named: "crow1")
-    let image1 = UIImage(named: "crow2")
+//    let image0 = UIImage(named: "crow1")
+//    let image1 = UIImage(named: "crow2")
     var count = 0
 
     @IBOutlet weak var myLabel: UILabel!
-    @IBOutlet weak var textName: UITextField!
     @IBOutlet weak var bleBtn: UIButton!
     
    
@@ -32,42 +30,93 @@ class AttendanceView: UIViewController, UITextFieldDelegate, UINavigationControl
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        myLabel.text = " tap me !"
-        textName.delegate = self
-        textName.placeholder = "半角数字"
-
+        
         bleCentral.setup()
-        bleBtn.setImage(image0, for: UIControlState())
+        myLabel.text = "送信中やで！\n音がなったら成功！"
+//        bleBtn.setImage(image0, for: UIControlState())
+//        myLabel.text = "接続中です..."
+        Thread.sleep(forTimeInterval: 2)
+        bleCentral.startScan()
+//        bleBtn.setImage(image1, for: UIControlState())
         
-        if ud.object(forKey: "Number") == nil {
-         textName.text = ""
-    } else {
-        textName.text = loadName()
-        }
-        
+        //back to foreground
+        NotificationCenter.default.addObserver(self, selector: #selector(catchNotification(notification:)), name: NSNotification.Name.UIApplicationWillEnterForeground, object: nil)
     }
-  
-
+    
+    //画面に表示されるたび
+//    override func viewWillAppear(_ animated: Bool) {
+//        bleCentral.startScan()
+//        print("viewDidApper")
+//        Thread.sleep(forTimeInterval: 3)
+//        bleCentral.writeRequest()
+//        if bleFlg == true {
+//            if ud.object(forKey: "Number") != nil {
+//                bleCentral.writeRequest()
+//                print("write request")
+//            }
+//            while !indicateFlg {
+//                Thread.sleep(forTimeInterval: 0.5)
+//                if indicateFlg == true {
+//                    bleBtn.setImage(image0, for: UIControlState())
+//                    myLabel.text = "送信完了しました"
+//                    break
+//                } else {
+//                    bleBtn.setImage(image1, for: UIControlState())
+//                    break
+//                }
+//            }
+//        } else {
+//            myLabel.text = "送信失敗\nカラスをタップしてください"
+//            bleBtn.setImage(image0, for: UIControlState())
+//        }
+//    }
+    
+    //when catch notification
+    @objc func catchNotification(notification: Notification) -> Void {
+        print("catchNotification")
+        bleCentral.startScan()
+        if ud.object(forKey: "Number") == nil {
+            alert()
+        } else {
+            bleCentral.writeRequest()
+        }
+    }
+ 
+    @IBAction func funcBtn(_ sender: UIButton) {
+        let nextVC = StartViewController()
+        let naviVC = UINavigationController(rootViewController: nextVC)
+        self.present(naviVC, animated: true, completion: nil)
+    }
     
     @IBAction func startBLE(_ sender: AnyObject) {
         count += 1
         
         if(count%2 == 0) {
-            bleBtn.setImage(image0, for: UIControlState())
+//            bleBtn.setImage(image0, for: UIControlState())
             bleCentral.stopScan()
-            myLabel.text = "tap me !"
+            myLabel.text = "再接続はわいをタップするんや！！"
             
         } else if(count%2 == 1) {
-            bleBtn.setImage(image1, for: UIControlState())
+//            bleBtn.setImage(image1, for: UIControlState())
             bleCentral.startScan()
-            myLabel.text = "connecting..."
+            myLabel.text = "接続中やで"
+            
+            
+//            while !bleFlg {
+//                if bleFlg == true {
+//                    print("chara発見")
+//                    bleCentral.writeRequest()
+//                    break
+//                } else {
+//                    print("chara見つからない")
+//                    break
+//                }
+//            }
         }
     }
     
-//    userDefaults読込
+    //userDefaults loadName
     func loadName() -> String {
-        
         let str: String = ud.object(forKey: "Number") as! String
         return str
     }
@@ -81,42 +130,9 @@ class AttendanceView: UIViewController, UITextFieldDelegate, UINavigationControl
         return true
     }
     
-    //入力制限
-    //これかvalidationに半角checkを追加するか。
-//    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-//        return string.isEmpty || string.range(of: "^[0-9]+$", options: .regularExpression, range: nil, locale: nil) != nil
-//    }
-    
-    
-    
-    //validationCheck
-    private func validationCheck() -> Bool {
-        var result = true
-
-        //number 空文字check
-        //TODO:- 半角かどうか
-        if let text = textName.text {
-            if text.count > 0 {
-            let predicate = NSPredicate(format: "SELF MATCHES '\\\\d+'")
-            
-                ud.set(text, forKey: "Number")
-                result = predicate.evaluate(with: text)
-
-            } else {
-                result = false
-          }
-        }
-            if result == false {
-                alert()
-            }
-            return result
-    }
-
-    
-    
     //入力エラーアラート
     func alert() {
-        let alert: UIAlertController = UIAlertController(title: "ERROR", message: "入力内容を確認してください", preferredStyle: UIAlertControllerStyle.alert)
+        let alert: UIAlertController = UIAlertController(title: "ERROR", message: "社員番号を入力してください", preferredStyle: UIAlertControllerStyle.alert)
         let defaultAction: UIAlertAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler:{
             (action: UIAlertAction!) -> Void in } )
         
@@ -124,165 +140,4 @@ class AttendanceView: UIViewController, UITextFieldDelegate, UINavigationControl
         present(alert, animated: true, completion: nil)
 
     }
-    
-    //送信完了アラート
-    func successAlert() {
-        let alert: UIAlertController = UIAlertController(title: "SUCCESS", message: "送信完了", preferredStyle: UIAlertControllerStyle.alert)
-        let defaultAction: UIAlertAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler:{
-            (action: UIAlertAction!) -> Void in } )
-        
-        alert.addAction(defaultAction)
-        present(alert, animated: true, completion: nil)
-    }
-
-    
-    //送信失敗アラート
-    func faildAlert() {
-        let alert: UIAlertController = UIAlertController(title: "ERROR", message: "送信失敗", preferredStyle: UIAlertControllerStyle.alert)
-        let defaultAction: UIAlertAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler:{ (action: UIAlertAction!) -> Void in } )
-        
-        alert.addAction(defaultAction)
-        present(alert, animated: true, completion: nil)
-    }
-
-    
-    
-    //出勤ボタン
-    @IBAction func inWork(_ sender: UIButton) {
-        
-        if bleFlg == true {
-        if validationCheck() {
-        ud.set(0, forKey: "Attendance")
-            bleCentral.writeRequest()
-        }
-        
-        while !indicateFlg {
-            Thread.sleep(forTimeInterval: 0.5)
-            print("処理まち")
-            
-            
-            if indicateFlg == true {
-                
-                successAlert()
-                
-                ud.removeObject(forKey: "Attendance")
-                bleBtn.setImage(image0, for: UIControlState())
-                
-                break
-            } else {
-                
-                faildAlert()
-                bleBtn.setImage(image0, for: UIControlState())
-
-                break
-            }
-        }
-        bleCentral.disconnect()
-        myLabel.text = "stop connect"
-            
-        } else {
-            faildAlert()
-        }
-    }
-    
-    
-    //退勤ボタン
-    @IBAction func outWork(_ sender: UIButton) {
-        
-        if bleFlg == true {
-        if validationCheck() {
-            ud.set(1, forKey: "Attendance")
-            bleCentral.writeRequest()
-        }
-        
-        while !indicateFlg {
-            Thread.sleep(forTimeInterval: 0.5)
-            print("処理まち")
-            
-            
-            if indicateFlg == true {
-               
-                successAlert()
-                
-                ud.removeObject(forKey: "Attendance")
-                bleBtn.setImage(image0, for: UIControlState())
-
-                break
-            } else {
-                
-                faildAlert()
-                bleBtn.setImage(image0, for: UIControlState())
-               
-                break
-            }
-        }
-        bleCentral.disconnect()
-        myLabel.text = "stop connect"
-            
-        } else {
-            faildAlert()
-        }
-    }
-    
-    
-//    //前画面に戻る
-//    @IBAction func tapToBack(_ sender: UIBarButtonItem) {
-//        self.navigationController?.popViewController(animated: true)
-//    }
-    
-    
-    //送信ボタン
-    //アラートor固定側(peripheral)での反応
-//@IBAction func tapToSend(_ sender: AnyObject) {
-//
-//    if validationCheck() {
-//
-//        bleCentral.writeRequest()
-//
-//    //attendanceのud消す
-//    ud.removeObject(forKey: "Attendance")
-//
-//    //"選択してください"に戻る
-//        selectAttend.selectRow(0, inComponent: 0, animated: true)
-//    }
-//
-//    //この辺でflgの状態知りたい
-//    //ループさせる
-//    while !indicateFlg {
-//
-//        //処理を一定時間止める
-//        Thread.sleep(forTimeInterval: 0.3)
-//        print("処理まち")
-//
-//
-//    if indicateFlg == true {
-//        let alert: UIAlertController = UIAlertController(title: "SUCCESS", message: "送信完了", preferredStyle: UIAlertControllerStyle.alert)
-//        let defaultAction: UIAlertAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler:{
-//            (action: UIAlertAction!) -> Void in } )
-//
-//        alert.addAction(defaultAction)
-//        present(alert, animated: true, completion: nil)
-//        print("とんでない！")
-//        bleCentral.disconnect()
-//
-//
-//        break
-//
-//    } else {
-//
-//        //faild to write request
-//        let alert: UIAlertController = UIAlertController(title: "ERROR", message: "送信失敗", preferredStyle: UIAlertControllerStyle.alert)
-//        let defaultAction: UIAlertAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler:{ (action: UIAlertAction!) -> Void in } )
-//
-//        alert.addAction(defaultAction)
-//        present(alert, animated: true, completion: nil)
-//        print("とんでる(；ω；)")
-//        break
-//      }
-//
-//    }
-//    bleCentral.stopScan()
-//    }
-//
-    
 }

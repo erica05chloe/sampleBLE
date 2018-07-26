@@ -16,26 +16,37 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
 
-        sleep(1);
-        
+//        let storyboard = UIStoryboard(name: "StartViewController", bundle: nil)
+//        let first = UserDefaults.standard.bool(forKey: "first")
+//        if(first == true) {
+//            UserDefaults.standard.set(false, forKey: "first")
+//        } else {
+//            UserDefaults.standard.set(true, forKey: "first")
+//        
+//            let startVC = storyboard.instantiateViewController(withIdentifier: "StartViewController") as! StartViewController
+//            self.window = UIWindow(frame: UIScreen.main.bounds)
+//            self.window?.rootViewController = startVC
+//        }
         
         //tabbar 配列
         var viewControllers: [UIViewController] = []
-        
+
         //1ページ目
         let firstTab = AttendanceView()
         firstTab.tabBarItem = UITabBarItem(title: "attend", image: UIImage(named: "dash"), tag: 1)
         viewControllers.append(firstTab)
-        
+
         //2ページ目
-        let secondTab = ChangeAttend()
-        secondTab.tabBarItem = UITabBarItem(title: "status", image: UIImage(named: "pin"), tag: 2)
-        viewControllers.append(secondTab)
-        
+//        let secondTab = ChangeAttend()
+//        secondTab.tabBarItem = UITabBarItem(title: "status", image: UIImage(named: "pin"), tag: 2)
+//        viewControllers.append(secondTab)
+
         //3ページ目
-        let thirdTab = ShowMember()
-        thirdTab.tabBarItem = UITabBarItem(title: "list", image: UIImage(named: "desk"), tag: 3)
-        viewControllers.append(thirdTab)
+//        let thirdTab = ShowMember()
+//        thirdTab.tabBarItem = UITabBarItem(title: "list", image: UIImage(named: "desk"), tag: 3)
+//        viewControllers.append(thirdTab)
+        
+
         
 //        let mainVc = StartViewController()
 //        let mainNVc = UINavigationController(rootViewController: mainVc)
@@ -45,14 +56,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         //セット
         let tabBarController = UITabBarController()
         tabBarController.setViewControllers(viewControllers, animated: false)
-        
+
         let colorKey = UIColor(red: 249/155, green: 161/255, blue: 188/255, alpha: 1.0)
         UITabBar.appearance().tintColor = colorKey
 
         window = UIWindow(frame: UIScreen.main.bounds)
         window?.rootViewController = tabBarController
         window?.makeKeyAndVisible()
-    
+
+
         return true
     }
 

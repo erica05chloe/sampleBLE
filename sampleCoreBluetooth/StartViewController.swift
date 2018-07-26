@@ -8,28 +8,67 @@
 
 import UIKit
 
-class StartViewController: UIViewController {
+class StartViewController: UIViewController, UITextFieldDelegate {
 
+    @IBOutlet weak var ownNumber: UITextField!
+    var ud = UserDefaults.standard
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Do any additional setup after loading the view.
-    }
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
+        ownNumber.delegate = self
+        ownNumber.placeholder = "半角数字(eg:001)"
     }
     
+   
 
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
+    //textField
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
     }
-    */
+    
+    //userDefaults
+    func loadName() -> String {
+        let str: String = ud.object(forKey: "Number") as! String
+        return str
+    }
+    
+    
+    @IBAction func sendNum(_ sender: Any) {
+        if validationCheck() {
+            self.dismiss(animated: true, completion: nil)
+        }
+    }
+    
+    //validation check
+    func validationCheck() -> Bool {
+        var result = true
+        if let text = ownNumber.text {
+            if text.count > 0 && text.count < 4 {
+                let predicate = NSPredicate(format: "SELF MATCHES '\\\\d+'")
+                ud.set(text, forKey: "Number")
+                result = predicate.evaluate(with: text)
+            } else {
+                result = false
+            }
+        }
+        if result == false{
+            alert()
+            ownNumber.text = ""
+        }
+        return result
+    }
+    
+    //入力内容エラーアラート
+    func alert() {
+        let alert: UIAlertController = UIAlertController(title: "ERROR", message: "入力内容を確認してください", preferredStyle: UIAlertControllerStyle.alert)
+        let defaultAction: UIAlertAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler:{
+            (action: UIAlertAction!) -> Void in } )
+        
+        alert.addAction(defaultAction)
+        present(alert, animated: true, completion: nil)
+        
+    }
 
 }
