@@ -16,17 +16,23 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
 
-//        let storyboard = UIStoryboard(name: "StartViewController", bundle: nil)
-//        let first = UserDefaults.standard.bool(forKey: "first")
-//        if(first == true) {
-//            UserDefaults.standard.set(false, forKey: "first")
-//        } else {
-//            UserDefaults.standard.set(true, forKey: "first")
-//        
-//            let startVC = storyboard.instantiateViewController(withIdentifier: "StartViewController") as! StartViewController
-//            self.window = UIWindow(frame: UIScreen.main.bounds)
-//            self.window?.rootViewController = startVC
+//        let ud = UserDefaults.standard
+//        let dict = ["firstLaunch": true]
+//        ud.register(defaults: dict)
+//
+//        if ud.bool(forKey: "firstLaunch"){
+//            ud.set(false, forKey: "firstLaunch")
+//            print("初回起動")
+//
+//            let viewControllers = ViewController(nibName: "StartViewController", bundle: nil)
+//            window = UIWindow(frame: UIScreen.main.bounds)
+//            window?.rootViewController = viewControllers
+//            window?.makeKeyAndVisible()
+//
+//            return true
+        
 //        }
+//        print("初回起動ではない")
         
         //tabbar 配列
         var viewControllers: [UIViewController] = []
@@ -47,12 +53,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 //        viewControllers.append(thirdTab)
         
 
-        
-//        let mainVc = StartViewController()
-//        let mainNVc = UINavigationController(rootViewController: mainVc)
-//        mainNVc.setNavigationBarHidden(true, animated: true)
-    
-        
         //セット
         let tabBarController = UITabBarController()
         tabBarController.setViewControllers(viewControllers, animated: false)
@@ -63,8 +63,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         window = UIWindow(frame: UIScreen.main.bounds)
         window?.rootViewController = tabBarController
         window?.makeKeyAndVisible()
-
-
+        
         return true
     }
 

@@ -10,8 +10,8 @@ import UIKit
 import CoreBluetooth
 
 
-class AttendanceView: UIViewController, UITextFieldDelegate, UINavigationControllerDelegate {
-    
+class AttendanceView: UIViewController, UITextFieldDelegate, UINavigationControllerDelegate, BleCentralDelegate {
+   
     var bleCentral = BleCentral()
     var ud = UserDefaults.standard
     
@@ -35,41 +35,40 @@ class AttendanceView: UIViewController, UITextFieldDelegate, UINavigationControl
         myLabel.text = "送信中やで！\n音がなったら成功！"
 //        bleBtn.setImage(image0, for: UIControlState())
 //        myLabel.text = "接続中です..."
-        Thread.sleep(forTimeInterval: 2)
-        bleCentral.startScan()
+//        Thread.sleep(forTimeInterval: 2)
+//        bleCentral.startScan()
 //        bleBtn.setImage(image1, for: UIControlState())
-        
+    
         //back to foreground
         NotificationCenter.default.addObserver(self, selector: #selector(catchNotification(notification:)), name: NSNotification.Name.UIApplicationWillEnterForeground, object: nil)
+        
     }
     
     //画面に表示されるたび
-//    override func viewWillAppear(_ animated: Bool) {
-//        bleCentral.startScan()
-//        print("viewDidApper")
-//        Thread.sleep(forTimeInterval: 3)
-//        bleCentral.writeRequest()
-//        if bleFlg == true {
-//            if ud.object(forKey: "Number") != nil {
-//                bleCentral.writeRequest()
-//                print("write request")
-//            }
-//            while !indicateFlg {
-//                Thread.sleep(forTimeInterval: 0.5)
-//                if indicateFlg == true {
-//                    bleBtn.setImage(image0, for: UIControlState())
-//                    myLabel.text = "送信完了しました"
-//                    break
-//                } else {
-//                    bleBtn.setImage(image1, for: UIControlState())
-//                    break
-//                }
-//            }
-//        } else {
-//            myLabel.text = "送信失敗\nカラスをタップしてください"
-//            bleBtn.setImage(image0, for: UIControlState())
-//        }
-//    }
+    override func viewWillAppear(_ animated: Bool) {
+        bleCentral.startScan()
+        print("viewWillApper")
+        Thread.sleep(forTimeInterval: 2)
+        bleCentral.writeRequest()
+        if bleFlg == true {
+            if ud.object(forKey: "Number") != nil {
+                bleCentral.writeRequest()
+                print("write request")
+                return
+            }
+            
+            while !indicateFlg {
+                Thread.sleep(forTimeInterval: 1)
+                if indicateFlg == true {
+                    myLabel.text = "送信完了しました"
+                    break
+                } else {
+                    myLabel.text = "送信失敗\nタップしてや"
+                    break
+                }
+            }
+        }
+    }
     
     //when catch notification
     @objc func catchNotification(notification: Notification) -> Void {
@@ -139,5 +138,13 @@ class AttendanceView: UIViewController, UITextFieldDelegate, UINavigationControl
         alert.addAction(defaultAction)
         present(alert, animated: true, completion: nil)
 
+    }
+    
+    func getIndicate() {
+        myLabel.text = "送信完了"
+    }
+    
+    func whenDisconnect(){
+        myLabel.text = "接続が切れました。\nやり直すにはタップ"
     }
 }

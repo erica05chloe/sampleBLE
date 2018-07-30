@@ -10,6 +10,7 @@ import UIKit
 
 class StartViewController: UIViewController, UITextFieldDelegate {
 
+
     @IBOutlet weak var ownNumber: UITextField!
     var ud = UserDefaults.standard
     
@@ -28,13 +29,6 @@ class StartViewController: UIViewController, UITextFieldDelegate {
         return true
     }
     
-    //userDefaults
-    func loadName() -> String {
-        let str: String = ud.object(forKey: "Number") as! String
-        return str
-    }
-    
-    
     @IBAction func sendNum(_ sender: Any) {
         if validationCheck() {
             self.dismiss(animated: true, completion: nil)
@@ -44,7 +38,8 @@ class StartViewController: UIViewController, UITextFieldDelegate {
     //validation check
     func validationCheck() -> Bool {
         var result = true
-        if let text = ownNumber.text {
+        if let text = ownNumber.text
+        {
             if text.count > 0 && text.count < 4 {
                 let predicate = NSPredicate(format: "SELF MATCHES '\\\\d+'")
                 ud.set(text, forKey: "Number")
@@ -59,7 +54,7 @@ class StartViewController: UIViewController, UITextFieldDelegate {
         }
         return result
     }
-    
+
     //入力内容エラーアラート
     func alert() {
         let alert: UIAlertController = UIAlertController(title: "ERROR", message: "入力内容を確認してください", preferredStyle: UIAlertControllerStyle.alert)

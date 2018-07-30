@@ -14,9 +14,15 @@ import UIKit
 var indicateFlg = false
 var bleFlg = false
 
+protocol BleCentralDelegate {
+    func getIndicate()
+    func whenDisconnect()
+}
 
-class BleCentral: UIViewController, CBCentralManagerDelegate, CBPeripheralDelegate {
+
+ class BleCentral: UIViewController, CBCentralManagerDelegate, CBPeripheralDelegate {
     
+    var _delegate: BleCentralDelegate?
     var _centralManager: CBCentralManager!
     var _peripheral: CBPeripheral!
     var _serviceUUID: CBUUID!
@@ -218,6 +224,7 @@ class BleCentral: UIViewController, CBCentralManagerDelegate, CBPeripheralDelega
             
             _peripheral.setNotifyValue(false, for: _characteristicForIndicate)
             
+            self._delegate?.getIndicate()
         }
     }
     
@@ -226,10 +233,12 @@ class BleCentral: UIViewController, CBCentralManagerDelegate, CBPeripheralDelega
         print("failed to connect peripheral")
     }
     
-    //TODO:- 30秒放置で切れる
+    
     //接続が切れたとき
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         print("dis4")
+        
+        self._delegate?.whenDisconnect()
     }
 
     
