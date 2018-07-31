@@ -19,6 +19,9 @@ class StartViewController: UIViewController, UITextFieldDelegate {
 
         ownNumber.delegate = self
         ownNumber.placeholder = "半角数字(eg:001)"
+        if ud.object(forKey: "Number") != nil {
+            ownNumber.text = "\(ud.object(forKey: "Number") ?? String.self)"
+        }
     }
     
    

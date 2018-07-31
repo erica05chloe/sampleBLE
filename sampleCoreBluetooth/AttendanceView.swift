@@ -18,6 +18,7 @@ class AttendanceView: UIViewController, UITextFieldDelegate, UINavigationControl
 //    let image0 = UIImage(named: "crow1")
 //    let image1 = UIImage(named: "crow2")
     var count = 0
+   
 
     @IBOutlet weak var myLabel: UILabel!
     @IBOutlet weak var bleBtn: UIButton!
@@ -31,8 +32,8 @@ class AttendanceView: UIViewController, UITextFieldDelegate, UINavigationControl
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        bleCentral.setup()
-        myLabel.text = "送信中やで！\n音がなったら成功！"
+//        bleCentral.setup()
+//        myLabel.text = "送信中やで！\n音がなったら成功！"
 //        bleBtn.setImage(image0, for: UIControlState())
 //        myLabel.text = "接続中です..."
 //        Thread.sleep(forTimeInterval: 2)
@@ -41,22 +42,32 @@ class AttendanceView: UIViewController, UITextFieldDelegate, UINavigationControl
     
         //back to foreground
         NotificationCenter.default.addObserver(self, selector: #selector(catchNotification(notification:)), name: NSNotification.Name.UIApplicationWillEnterForeground, object: nil)
-        
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        if ud.object(forKey: "Number") == nil {
+            print("ud ない")
+            let vc = StartViewController()
+            self.present(vc, animated: true, completion: nil)
+            
+        } else {
+            print("ud ある")
+        }
     }
     
     //画面に表示されるたび
     override func viewWillAppear(_ animated: Bool) {
+        bleCentral.setup()
+        myLabel.text = "送信中やで！\n音がなったら成功！"
+        
         bleCentral.startScan()
-        print("viewWillApper")
         Thread.sleep(forTimeInterval: 2)
-        bleCentral.writeRequest()
         if bleFlg == true {
             if ud.object(forKey: "Number") != nil {
-                bleCentral.writeRequest()
                 print("write request")
                 return
             }
-            
+
             while !indicateFlg {
                 Thread.sleep(forTimeInterval: 1)
                 if indicateFlg == true {
@@ -77,7 +88,7 @@ class AttendanceView: UIViewController, UITextFieldDelegate, UINavigationControl
         if ud.object(forKey: "Number") == nil {
             alert()
         } else {
-            bleCentral.writeRequest()
+            print("戻ってきてからの接続")
         }
     }
  

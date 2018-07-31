@@ -127,7 +127,7 @@ protocol BleCentralDelegate {
             for cha: CBCharacteristic in characteristics! {
                 if cha.uuid.isEqual(_characteristicUUID){
                     _characteristicForWrite = cha
-                    print("sキャラ発見: \(cha)")
+                    print("キャラ発見: \(cha)")
                     bleFlg = true
     
                 } else if cha.uuid.isEqual(_indiCharaUUID){
@@ -144,7 +144,6 @@ protocol BleCentralDelegate {
                     
                     return
                 } else {
-                    print("writerequestした")
                     self.writeRequest()
                 }
             }
