@@ -31,7 +31,7 @@
                         <navigationItem title="出勤・退勤" leftItemsSupplementBackButton="YES" id="Br8-RE-HhU"/>
                     </items>
                 </navigationBar>
-                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="ふきだし" translatesAutoresizingMaskIntoConstraints="NO" id="PUc-CG-WVH">
+                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="comment" translatesAutoresizingMaskIntoConstraints="NO" id="PUc-CG-WVH">
                     <rect key="frame" x="39" y="162" width="200" height="219"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                 </imageView>
@@ -65,8 +65,8 @@
         </view>
     </objects>
     <resources>
+        <image name="comment" width="180" height="300"/>
         <image name="function" width="32" height="32"/>
         <image name="kero" width="2697" height="3217"/>
-        <image name="ふきだし" width="180" height="300"/>
     </resources>
 </document>
